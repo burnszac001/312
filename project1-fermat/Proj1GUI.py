@@ -8,16 +8,7 @@ import sys
 # "which_pyqt.py" that says which version to use.  Versions before PYQT4 are not supported.
 #
 from which_pyqt import PYQT_VER
-if PYQT_VER == 'PYQT5':
-	from PyQt5.QtWidgets import QApplication, QWidget
-	from PyQt5.QtGui import QIcon
-	from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout
-	from PyQt5.QtWidgets import QLabel, QPushButton, QLineEdit
-elif PYQT_VER == 'PYQT4':
-	from PyQt4.QtGui import QApplication, QWidget
-	from PyQt4.QtGui import QHBoxLayout, QVBoxLayout
-	from PyQt4.QtGui import QIcon, QLabel, QPushButton, QLineEdit
-elif PYQT_VER == 'PYQT6':
+if PYQT_VER == 'PYQT6':
 	from PyQt6.QtWidgets import QApplication, QWidget
 	from PyQt6.QtGui import QIcon
 	from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout
