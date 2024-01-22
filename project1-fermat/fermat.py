@@ -16,8 +16,6 @@ def mod_exp(x, y, N):
         return pow(z, 2, N)
     return (x * pow(z, 2)) % N
 
-print(mod_exp(3, 24, 97))
-
 
 # You will need to implement this function and change the return value.   
 def fprobability(k: int):
@@ -56,6 +54,7 @@ def fermat(N: int, k: int) -> str:
 def miller_rabin(N, k):
     mod = N
     for _ in range(k):
+        # reset the exponent for each iteration
         exp = N - 1
         base = randint(2, N - 1)
         while exp < 2:
