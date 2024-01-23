@@ -56,15 +56,22 @@ def miller_rabin(N, k):
     for _ in range(k):
         # reset the exponent for each iteration
         exp = N - 1
-        base = randint(2, N - 1)
-        while exp < 2:
+        base = randint(2, N - 2)
+        while exp > 2:
+            if exp % 2 == 1:
+                break
+
             result = mod_exp(base, exp, mod)
             if result == 1:
+                # divide the exponent by 2 and continue
                 exp = floor(exp / 2)
                 continue
+            # if the result is N - 1, move on to the next base test
             elif result == (N - 1):
                 break
 
+            # N is composite if mod_exp doesn't return 1 or (N - 1)
             return 'composite'
 
     return 'prime'
+
