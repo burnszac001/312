@@ -81,7 +81,7 @@ class Proj1GUI( QWidget ):
 
 #
 # This is the method connected to the Test Button.  It calls the actual primality test code
-# (which you will implement) from the "fermat.py" file.
+# (which you will implement) from the "312.py" file.
 #
 	def testClicked( self ):
 		try:

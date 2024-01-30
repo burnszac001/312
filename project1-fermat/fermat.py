@@ -33,13 +33,13 @@ def mprobability(k):
 # To generate random values for a, you will most likely want to use
 # random.randint(low,hi) which gives a random integer between low and
 # high, inclusive.
-def fermat(N: int, k: int) -> str:
+def fermat(N: int, k: int):
     exp = N - 1
     mod = N
 
     for i in range(k):
         base = randint(1, N - 1)
-        if mod_exp(base, exp, mod) != 1:
+        if mod_exp(base, exp, mod) != 1:    
             return 'composite'
 
     return 'prime'
@@ -58,9 +58,6 @@ def miller_rabin(N, k):
         exp = N - 1
         base = randint(2, N - 2)
         while exp > 2:
-            if exp % 2 == 1:
-                break
-
             result = mod_exp(base, exp, mod)
             if result == 1:
                 # divide the exponent by 2 and continue
@@ -74,4 +71,3 @@ def miller_rabin(N, k):
             return 'composite'
 
     return 'prime'
-
