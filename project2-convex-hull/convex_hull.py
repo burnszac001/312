@@ -54,20 +54,69 @@ class ConvexHullSolver(QObject):
         self.view = view
         assert (type(points) is list and type(points[0]) is QPointF)
 
-
-
-
         t1 = time.time()
-        # TODO: SORT THE POINTS BY INCREASING X-VALUE
+
+        sorted_points = sorted(points, key=lambda point: point.x())  # time complexity: O(nlogn) worst case
+
         t2 = time.time()
 
         t3 = time.time()
-        # this is a dummy polygon of the first 3 unsorted points
-        polygon = [QLineF(points[i], points[(i + 1) % 3]) for i in range(3)]
-        # TODO: REPLACE THE LINE ABOVE WITH A CALL TO YOUR DIVIDE-AND-CONQUER CONVEX HULL SOLVER
+        
+        polygon = self.generate_hull(sorted_points)  # time complexity: O(nlogn) worst case
+
         t4 = time.time()
 
-        # when passing lines to the display, pass a list of QLineF objects.  Each QLineF
-        # object can be created with two QPointF objects corresponding to the endpoints
         self.showHull(polygon, RED)
         self.showText('Time Elapsed (Convex Hull): {:3.3f} sec'.format(t4 - t3))
+
+    def generate_hull(self, points):
+        polygon = []
+        self.__generate_hull(points, polygon)
+        return polygon
+
+    def __generate_hull(self, points, polygon):
+        hull_size = len(points)
+        if hull_size in (2, 3):
+            if hull_size == 2:
+                polygon.extend([QLineF(points[0], points[1])])
+            elif hull_size == 3:
+                polygon.extend([QLineF(points[0], points[1]), QLineF(points[0], points[2]), QLineF(points[1], points[2])])
+            return
+
+        midpoint = hull_size // 2
+        left_hull = points[:midpoint]
+        right_hull = points[midpoint:]
+
+        self.__generate_hull(left_hull, polygon)
+        self.__generate_hull(right_hull, polygon)
+
+        self.combine_hulls(left_hull, right_hull, polygon)
+
+    def combine_hulls(self, left_hull, right_hull, polygon):
+        # find upper tangent and add it to the polygon
+        self.upper_tangent(left_hull, right_hull, polygon)
+        # find lower tangent and add it to the polygon
+        self.lower_tangent(left_hull, right_hull, polygon)
+        # find all the lines enclosed by upper and lower tangent and remove them from polygon
+        self.remove_inner_lines(left_hull, right_hull, polygon)
+
+    def upper_tangent(self, left_hull, right_hull, polygon):
+        # The upper tangent is found when a line connecting the two hulls by one point on either side contains all
+        # points from both hulls below it.
+        # The process for finding this upper tangent is connecting the right most point on the left hull with the left
+        # most point on the right hull. If the points on the right side aren't under the line, rotate the point on the
+        # right until they are. Same as the left side. Continue until all the points on both side are under the line.
+
+        left_hull_right_point = left_hull[-1]
+        right_hull_left_point = right_hull[0]
+        temp_line = QLineF(left_hull_right_point, right_hull_left_point)
+        done = False
+
+        while not done:
+            done = True
+
+    def lower_tangent(self, left_hull, right_hull, polygon):
+        pass
+
+    def remove_inner_lines(self, left_hull, right_hull, polygon):
+        pass
