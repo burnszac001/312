@@ -47,6 +47,57 @@ class ConvexHullSolver(QObject):
     def showText(self, text):
         self.view.displayStatusText(text)
 
+    # Time complexity: O(1)
+    @staticmethod
+    def calculate_slope(point1: QPointF, point2: QPointF):
+        return (point2.y() - point1.y()) / (point2.x() - point1.x())
+
+    # Time complexity: O(1)
+    def sort_points_clockwise(self, points, hull_size):
+        if hull_size == 2:
+            return points  # the points are already sorted in clockwise order
+        elif hull_size == 3:
+            # sort points in clockwise order
+            slope_12 = self.calculate_slope(points[0], points[1])
+            slope_13 = self.calculate_slope(points[0], points[2])
+
+            if slope_12 > slope_13:
+                return points
+            return [points[0], points[2], points[1]]
+
+    # Time complexity: O(n)
+    # @staticmethod
+    # def get_rightmost_index(hull: [QPointF]):
+    #     x_value = hull[0].x()
+    #     rightmost_point = hull[0]
+    #
+    #     for i, point in enumerate(hull[1:]):
+    #         if point.x() < x_value:
+    #             break
+    #         x_value = point.x()
+    #         rightmost_point = point
+    #
+    #     return i
+
+    @staticmethod
+    def get_rightmost_index(hull: [QPointF]):
+        highest_x = -1.1
+        highest_index = -1
+        for i, point in enumerate(hull):
+            if point.x() >= highest_x:
+                highest_x = point.x()
+                highest_index = i
+
+        return highest_index
+
+    @staticmethod
+    def wrap_next_index(index, length):
+        return (index + 1) % length
+
+    @staticmethod
+    def wrap_prev_index(index, length):
+        return (index - 1) % length
+
     # This is the method that gets called by the GUI and actually executes
     # the finding of the hull
     def compute_hull(self, points, pause, view):
@@ -70,53 +121,121 @@ class ConvexHullSolver(QObject):
         self.showText('Time Elapsed (Convex Hull): {:3.3f} sec'.format(t4 - t3))
 
     def generate_hull(self, points):
+        hull = self._generate_hull(points)
         polygon = []
-        self.__generate_hull(points, polygon)
+        for i, point in enumerate(hull[1:]):
+            polygon.append(QLineF(hull[i], point))
+        polygon.append(QLineF(hull[-1], hull[0]))
         return polygon
 
-    def __generate_hull(self, points, polygon):
+    def _generate_hull(self, points: [QPointF]):
+        # Time complexity: O(1)
         hull_size = len(points)
         if hull_size in (2, 3):
-            if hull_size == 2:
-                polygon.extend([QLineF(points[0], points[1])])
-            elif hull_size == 3:
-                polygon.extend([QLineF(points[0], points[1]), QLineF(points[0], points[2]), QLineF(points[1], points[2])])
-            return
+            return self.sort_points_clockwise(points, hull_size)
 
+        # Time complexity: O(n)
         midpoint = hull_size // 2
         left_hull = points[:midpoint]
         right_hull = points[midpoint:]
 
-        self.__generate_hull(left_hull, polygon)
-        self.__generate_hull(right_hull, polygon)
+        # Time complexity:
+        left_hull = self._generate_hull(left_hull)
+        right_hull = self._generate_hull(right_hull)
 
-        self.combine_hulls(left_hull, right_hull, polygon)
+        # Time complexity:
+        return self.combine_hulls(left_hull, right_hull)
 
-    def combine_hulls(self, left_hull, right_hull, polygon):
-        # find upper tangent and add it to the polygon
-        self.upper_tangent(left_hull, right_hull, polygon)
-        # find lower tangent and add it to the polygon
-        self.lower_tangent(left_hull, right_hull, polygon)
-        # find all the lines enclosed by upper and lower tangent and remove them from polygon
-        self.remove_inner_lines(left_hull, right_hull, polygon)
+    def combine_hulls(self, left_hull, right_hull):
+        index_l = self.get_rightmost_index(left_hull) # starting index for the left hull
+        index_r = 0 # starting index for the right hull (it's always zero)
 
-    def upper_tangent(self, left_hull, right_hull, polygon):
-        # The upper tangent is found when a line connecting the two hulls by one point on either side contains all
-        # points from both hulls below it.
-        # The process for finding this upper tangent is connecting the right most point on the left hull with the left
-        # most point on the right hull. If the points on the right side aren't under the line, rotate the point on the
-        # right until they are. Same as the left side. Continue until all the points on both side are under the line.
+        # these are used when we need to wrap around to the start of a list
+        len_left = len(left_hull)
+        len_right = len(right_hull)
 
-        left_hull_right_point = left_hull[-1]
-        right_hull_left_point = right_hull[0]
-        temp_line = QLineF(left_hull_right_point, right_hull_left_point)
+        # find the indexes of the points that make up the upper tangent
+        upper_left_i, upper_right_i = self.upper_tangent(left_hull, right_hull, index_l, index_r, len_left, len_right)
+
+        # find the indexes of the points that make up the lower tangent
+        lower_left_i, lower_right_i = self.lower_tangent(left_hull, right_hull, index_l, index_r, len_left, len_right)
+
+
+        return self.remove_inner_points(left_hull, right_hull, upper_left_i, upper_right_i, lower_left_i, lower_right_i)
+
+    def upper_tangent(self, left_hull, right_hull, left_index, right_index, mod_l, mod_r):
+        current_slope = self.calculate_slope(left_hull[left_index], right_hull[right_index])
+        # Time complexity: O()
         done = False
-
         while not done:
             done = True
 
-    def lower_tangent(self, left_hull, right_hull, polygon):
-        pass
+            # the right side
+            while True:
+                next_right_index = self.wrap_next_index(right_index, mod_r)
+                new_slope = self.calculate_slope(left_hull[left_index], right_hull[next_right_index])
+                if new_slope < current_slope:
+                    break
+                current_slope = new_slope
+                right_index = self.wrap_next_index(right_index, mod_r)
+                done = False
 
-    def remove_inner_lines(self, left_hull, right_hull, polygon):
-        pass
+            # the left side
+            while True:
+                next_left_index = self.wrap_prev_index(left_index, mod_l)
+                new_slope = self.calculate_slope(left_hull[next_left_index], right_hull[right_index])
+                if new_slope > current_slope:
+                    break
+                current_slope = new_slope
+                left_index = self.wrap_prev_index(left_index, mod_l)
+                done = False
+
+        return left_index, right_index
+
+
+    def lower_tangent(self, left_hull, right_hull, left_index, right_index, mod_l, mod_r):
+        current_slope = self.calculate_slope(left_hull[left_index], right_hull[right_index])
+        # Time complexity: O()
+        done = False
+        while not done:
+            done = True
+
+            # the left side
+            while True:
+                next_left_index = self.wrap_next_index(left_index, mod_l)
+                new_slope = self.calculate_slope(left_hull[next_left_index], right_hull[right_index])
+                if new_slope < current_slope:
+                    break
+                current_slope = new_slope
+                left_index = self.wrap_next_index(left_index, mod_l)
+                done = False
+
+            # the right side
+            while True:
+                next_right_index = self.wrap_prev_index(right_index, mod_r)
+                new_slope = self.calculate_slope(left_hull[left_index], right_hull[next_right_index])
+                if new_slope > current_slope:
+                    break
+                current_slope = new_slope
+                right_index = self.wrap_prev_index(right_index, mod_r)
+                done = False
+
+        return left_index, right_index
+
+    @staticmethod
+    def remove_inner_points(left_hull, right_hull, upper_left_i, upper_right_i, lower_left_i, lower_right_i):
+        first = left_hull[:upper_left_i + 1]
+
+        if lower_right_i > upper_right_i:
+            second = right_hull[upper_right_i: lower_right_i + 1]
+        elif lower_right_i == upper_right_i:
+            second = [right_hull[upper_right_i]]
+        else:
+            second = right_hull[upper_right_i:] + right_hull[:lower_right_i + 1]
+
+        if lower_left_i == 0:
+            return first + second
+
+        third = left_hull[lower_left_i:]
+
+        return first + second + third
