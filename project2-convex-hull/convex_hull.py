@@ -65,20 +65,7 @@ class ConvexHullSolver(QObject):
                 return points
             return [points[0], points[2], points[1]]
 
-    # Time complexity: O(n)
-    # @staticmethod
-    # def get_rightmost_index(hull: [QPointF]):
-    #     x_value = hull[0].x()
-    #     rightmost_point = hull[0]
-    #
-    #     for i, point in enumerate(hull[1:]):
-    #         if point.x() < x_value:
-    #             break
-    #         x_value = point.x()
-    #         rightmost_point = point
-    #
-    #     return i
-
+    # Time complexity: O(|hull|)
     @staticmethod
     def get_rightmost_index(hull: [QPointF]):
         highest_x = -1.1
@@ -90,10 +77,12 @@ class ConvexHullSolver(QObject):
 
         return highest_index
 
+    # Time complexity: O(1)
     @staticmethod
     def wrap_next_index(index, length):
         return (index + 1) % length
 
+    # Time complexity: O(1)
     @staticmethod
     def wrap_prev_index(index, length):
         return (index - 1) % length
@@ -122,31 +111,37 @@ class ConvexHullSolver(QObject):
 
     def generate_hull(self, points):
         hull = self._generate_hull(points)
+
+        # generate the outline for the GUI
         polygon = []
         for i, point in enumerate(hull[1:]):
             polygon.append(QLineF(hull[i], point))
         polygon.append(QLineF(hull[-1], hull[0]))
         return polygon
 
+
+    # Time Complexity O(|points| * log(|points|)
     def _generate_hull(self, points: [QPointF]):
         # Time complexity: O(1)
         hull_size = len(points)
         if hull_size in (2, 3):
             return self.sort_points_clockwise(points, hull_size)
 
-        # Time complexity: O(n)
+        # Time complexity: O(points)
         midpoint = hull_size // 2
         left_hull = points[:midpoint]
         right_hull = points[midpoint:]
 
-        # Time complexity:
+        # Time complexity: O(log(points))
         left_hull = self._generate_hull(left_hull)
         right_hull = self._generate_hull(right_hull)
 
-        # Time complexity:
+        # Time complexity: O(|points|)
         return self.combine_hulls(left_hull, right_hull)
 
+    # Time Complexity: O(|left_hull| + |right_hull|)
     def combine_hulls(self, left_hull, right_hull):
+        # Time complexity: O(|left_hull|)
         index_l = self.get_rightmost_index(left_hull) # starting index for the left hull
         index_r = 0 # starting index for the right hull (it's always zero)
 
@@ -163,9 +158,10 @@ class ConvexHullSolver(QObject):
 
         return self.remove_inner_points(left_hull, right_hull, upper_left_i, upper_right_i, lower_left_i, lower_right_i)
 
+    # Time complexity: O(|left_hull| + |right_hull|)
     def upper_tangent(self, left_hull, right_hull, left_index, right_index, mod_l, mod_r):
         current_slope = self.calculate_slope(left_hull[left_index], right_hull[right_index])
-        # Time complexity: O()
+
         done = False
         while not done:
             done = True
@@ -192,7 +188,7 @@ class ConvexHullSolver(QObject):
 
         return left_index, right_index
 
-
+    # Time complexity: O(|left_hull| + |right_hull|)
     def lower_tangent(self, left_hull, right_hull, left_index, right_index, mod_l, mod_r):
         current_slope = self.calculate_slope(left_hull[left_index], right_hull[right_index])
         # Time complexity: O()
@@ -222,6 +218,7 @@ class ConvexHullSolver(QObject):
 
         return left_index, right_index
 
+    # Time complexity: O(|left_hull| + |right_hull|)
     @staticmethod
     def remove_inner_points(left_hull, right_hull, upper_left_i, upper_right_i, lower_left_i, lower_right_i):
         first = left_hull[:upper_left_i + 1]
