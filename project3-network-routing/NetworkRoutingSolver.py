@@ -19,16 +19,22 @@ class NetworkRoutingSolver:
         #       INSTEAD OF THE DUMMY SET OF EDGES BELOW
         #       IT'S JUST AN EXAMPLE OF THE FORMAT YOU'LL 
         #       NEED TO USE
+
+
+
         path_edges = []
         total_length = 0
         node = self.network.nodes[self.source]
-        edges_left = 3
-        while edges_left > 0:
-            edge = node.neighbors[2]
-            path_edges.append( (edge.src.loc, edge.dest.loc, '{:.0f}'.format(edge.length)) )
-            total_length += edge.length
-            node = edge.dest
-            edges_left -= 1
+
+
+
+        # edges_left = 3
+        # while edges_left > 0:
+        #     edge = node.neighbors[2]
+        #     path_edges.append( (edge.src.loc, edge.dest.loc, '{:.0f}'.format(edge.length)) )
+        #     total_length += edge.length
+        #     node = edge.dest
+        #     edges_left -= 1
         return {'cost':total_length, 'path':path_edges}
 
     def computeShortestPaths( self, srcIndex, use_heap=False ):
