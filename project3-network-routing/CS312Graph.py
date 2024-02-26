@@ -19,12 +19,25 @@ class CS312GraphNode:
         self.loc       = node_loc
         self.neighbors = [] #node_neighbors
 
+    def get_edge_distance(self, node):
+        for edge in self.neighbors:
+            if edge.dest == node:
+                return edge.length
+
     def addEdge( self, neighborNode, weight ):
         self.neighbors.append( CS312GraphEdge(self,neighborNode,weight) )
 
     def __str__( self ):
         neighbors = [edge.dest.node_id for edge in self.neighbors]
         return 'Node(id:{},neighbors:{})'.format(self.node_id,neighbors)
+
+    def __hash__(self):
+        return hash(self.node_id)
+
+    def __eq__(self, other):
+        if isinstance(other, CS312GraphNode):
+            return self.node_id == other.node_id
+        return False
 
 
 class CS312Graph:

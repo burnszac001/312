@@ -2,6 +2,8 @@
 
 
 from CS312Graph import *
+from array_priority_queue import ArrayPriorityQueue
+from heap_priority_queue import HeapPriorityQueue
 import time
 
 
@@ -15,34 +17,36 @@ class NetworkRoutingSolver:
 
     def getShortestPath( self, destIndex ):
         self.dest = destIndex
-        # TODO: RETURN THE SHORTEST PATH FOR destIndex
-        #       INSTEAD OF THE DUMMY SET OF EDGES BELOW
-        #       IT'S JUST AN EXAMPLE OF THE FORMAT YOU'LL 
-        #       NEED TO USE
 
-
-
+        dest_distance = self.queue.get_distance(destIndex)
+        total_length = dest_distance if dest_distance != None else 0
+        print(total_length)
         path_edges = []
-        total_length = 0
-        node = self.network.nodes[self.source]
+        if total_length != 0 and total_length != float('inf'):
+            path_edges = self.queue.get_path(destIndex)
 
-
-
-        # edges_left = 3
-        # while edges_left > 0:
-        #     edge = node.neighbors[2]
-        #     path_edges.append( (edge.src.loc, edge.dest.loc, '{:.0f}'.format(edge.length)) )
-        #     total_length += edge.length
-        #     node = edge.dest
-        #     edges_left -= 1
         return {'cost':total_length, 'path':path_edges}
 
     def computeShortestPaths( self, srcIndex, use_heap=False ):
         self.source = srcIndex
+        if use_heap:
+            self.queue = HeapPriorityQueue(self.network.nodes, srcIndex)
+        else:
+            self.queue = ArrayPriorityQueue(self.network.nodes, srcIndex)
+
         t1 = time.time()
-        # TODO: RUN DIJKSTRA'S TO DETERMINE SHORTEST PATHS.
-        #       ALSO, STORE THE RESULTS FOR THE SUBSEQUENT
-        #       CALL TO getShortestPath(dest_index)
+        self.dijkstra(srcIndex, self.network.nodes)
         t2 = time.time()
+
         return (t2-t1)
 
+    def dijkstra(self, src_index: int, nodes: [CS312GraphNode]):
+        current_node_index = src_index
+        while True:
+            for edge in nodes[current_node_index].neighbors:
+                self.queue.view_edge(edge)
+
+            if self.queue.is_empty():
+                break
+
+            current_node_index = self.queue.delete_min()
