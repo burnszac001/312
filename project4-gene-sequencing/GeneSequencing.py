@@ -7,7 +7,7 @@ import sys
 
 PYCHARM_DEBUG=True
 
-sys.setrecursionlimit(1000000)
+sys.setrecursionlimit(10000)
 
 # Used to compute the bandwidth for banded version
 MAXINDELS = 3
