@@ -81,7 +81,76 @@ class TSPSolver:
 	'''
 
 	def greedy( self,time_allowance=60.0 ):
-		pass
+		results = {}
+		cities = self._scenario.getCities()
+		num_cities = len(cities)
+		found_tour = False
+		count = 0
+		bssf = None
+		start_time = time.time()
+		impossible_path = False
+
+		# implement greedy algorithm
+
+		start_index = 0
+		while not found_tour and start_index < num_cities - 1:
+			# pick arbitrary city
+			current_city = cities[start_index]
+			visited_cities = [current_city]
+			visited_indexes = set()
+			visited_indexes.add(start_index)
+
+			# visit every city
+			while len(visited_indexes) < num_cities:
+				# find the lowest cost to another unvisited city
+				min_cost = np.inf
+				min_index = -1
+
+				# look at every other city that has not been visited
+				for index, city in enumerate(cities):
+					if index not in visited_indexes:
+						# find the cost to the unvisited city
+						cost_to = current_city.costTo(city)
+						if cost_to < min_cost:
+							# update the min cost and city index
+							min_cost = cost_to
+							min_index = index
+
+				if min_index == -1:
+					# no greedy path could be found
+					impossible_path = True
+					break
+
+				# add the index to visited indexes
+				visited_indexes.add(min_index)
+
+				# set the current city to the one found
+				current_city = cities[min_index]
+
+				# add the current city to the list of visited cities
+				visited_cities.append(current_city)
+
+
+			if not impossible_path:
+				# if the last city loops back to the original city, a tour has been found
+				if visited_cities[-1].costTo(visited_cities[0]) < np.inf:
+					found_tour = True
+					count += 1
+
+				bssf = TSPSolution(visited_cities)
+
+			start_index += 1
+
+		# end greedy algorithm
+		end_time = time.time()
+		results['cost'] = bssf.cost if found_tour else math.inf
+		results['time'] = end_time - start_time
+		results['count'] = count
+		results['soln'] = bssf
+		results['max'] = None
+		results['total'] = None
+		results['pruned'] = None
+		return results
 
 
 
