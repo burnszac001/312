@@ -28,6 +28,8 @@ else:
 from TSPSolver import *
 from TSPClasses import *
 
+from graph import Graph
+
 
 class PointLineView( QWidget ):
 	def __init__( self, status_bar, data_range ):
@@ -191,7 +193,7 @@ class Proj5GUI( QMainWindow ):
 
 		self._scenario = None
 		self.initUI()
-		self.solver = TSPSolver( self.view )
+		self.solver = TSPSolver(self.view)
 		self.genParams = {'size':None,'seed':None,'diff':None}
 
 	def newPoints(self):
@@ -210,7 +212,7 @@ class Proj5GUI( QMainWindow ):
 			if True:
 				xval = xr[0] + (xr[1]-xr[0])*x
 				yval = yr[0] + (yr[1]-yr[0])*y
-				ptlist.append( QPointF(xval,yval) )
+				ptlist.append(QPointF(xval,yval))
 		return ptlist
 
 	def generateNetwork(self):
@@ -218,6 +220,7 @@ class Proj5GUI( QMainWindow ):
 		diff = self.diffDropDown.currentText()
 		rand_seed = int(self.curSeed.text())
 		self._scenario = Scenario( city_locations=points, difficulty=diff, rand_seed=rand_seed )
+		Graph(points, diff, rand_seed)
 
 		self.genParams = {'size':self.size.text(),'seed':self.curSeed.text(),'diff':diff}
 		self.view.clearEdges()

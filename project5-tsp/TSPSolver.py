@@ -19,10 +19,10 @@ import itertools
 
 
 class TSPSolver:
-	def __init__( self, gui_view ):
-		self._scenario = None
+	def __init__(self, gui_view):
+		self._scenario: Scenario = None
 
-	def setupWithScenario( self, scenario ):
+	def setupWithScenario(self, scenario):
 		self._scenario = scenario
 
 
@@ -37,7 +37,7 @@ class TSPSolver:
 		algorithm</returns>
 	'''
 
-	def defaultRandomTour( self, time_allowance=60.0 ):
+	def defaultRandomTour(self, time_allowance=60.0):
 		results = {}
 		cities = self._scenario.getCities()
 		ncities = len(cities)
@@ -47,11 +47,11 @@ class TSPSolver:
 		start_time = time.time()
 		while not foundTour and time.time()-start_time < time_allowance:
 			# create a random permutation
-			perm = np.random.permutation( ncities )
+			perm = np.random.permutation(ncities)
 			route = []
 			# Now build the route using the random permutation
-			for i in range( ncities ):
-				route.append( cities[ perm[i] ] )
+			for i in range(ncities):
+				route.append(cities[perm[i]])
 			bssf = TSPSolution(route)
 			count += 1
 			if bssf.cost < np.inf:
@@ -79,9 +79,21 @@ class TSPSolver:
 		solution found, and three null values for fields not used for this
 		algorithm</returns>
 	'''
+	def greedy(self, time_allowance=60.0):
 
-	def greedy( self,time_allowance=60.0 ):
-		pass
+
+
+
+
+		return {
+			'cost': None,
+			'time': None,
+			'count': None,
+			'soln': None,
+			'max': None,
+			'total': None,
+			'pruned': None
+		}
 
 
 

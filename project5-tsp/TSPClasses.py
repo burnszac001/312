@@ -9,20 +9,20 @@ import time
 
 
 class TSPSolution:
-	def __init__( self, listOfCities):
+	def __init__(self, listOfCities):
 		self.route = listOfCities
 		self.cost = self._costOfRoute()
 
-	def _costOfRoute( self ):
+	def _costOfRoute(self):
 		cost = 0
 		last = self.route[0]
 		for city in self.route[1:]:
 			cost += last.costTo(city)
 			last = city
-		cost += self.route[-1].costTo( self.route[0] )
+		cost += self.route[-1].costTo(self.route[0])
 		return cost
 
-	def enumerateEdges( self ):
+	def enumerateEdges(self):
 		elist = []
 		c1 = self.route[0]
 		for c2 in self.route[1:]:
@@ -38,7 +38,7 @@ class TSPSolution:
 		return elist
 
 
-def nameForInt( num ):
+def nameForInt(num):
 	if num == 0:
 		return ''
 	elif num <= 26:
@@ -52,21 +52,16 @@ class Scenario:
 
 	HARD_MODE_FRACTION_TO_REMOVE = 0.20 # Remove 20% of the edges
 
-	def __init__( self, city_locations, difficulty, rand_seed ):
+	def __init__(self, city_locations, difficulty, rand_seed):
 		self._difficulty = difficulty
 
 		if difficulty == "Normal" or difficulty == "Hard":
-			self._cities = [City( pt.x(), pt.y(), \
-								  random.uniform(0.0,1.0) \
-								) for pt in city_locations]
+			self._cities = [City(pt.x(), pt.y(), random.uniform(0.0,1.0)) for pt in city_locations]
 		elif difficulty == "Hard (Deterministic)":
-			random.seed( rand_seed )
-			self._cities = [City( pt.x(), pt.y(), \
-								  random.uniform(0.0,1.0) \
-								) for pt in city_locations]
+			random.seed(rand_seed)
+			self._cities = [City(pt.x(), pt.y(), random.uniform(0.0,1.0)) for pt in city_locations]
 		else:
-			self._cities = [City( pt.x(), pt.y() ) for pt in city_locations]
-
+			self._cities = [City(pt.x(), pt.y()) for pt in city_locations]
 
 		num = 0
 		for city in self._cities:
@@ -76,18 +71,18 @@ class Scenario:
 
 		# Assume all edges exists except self-edges
 		ncities = len(self._cities)
-		self._edge_exists = ( np.ones((ncities,ncities)) - np.diag( np.ones((ncities)) ) ) > 0
+		self._edge_exists = (np.ones((ncities,ncities)) - np.diag(np.ones((ncities)))) > 0
 
 		if difficulty == "Hard":
 			self.thinEdges()
 		elif difficulty == "Hard (Deterministic)":
 			self.thinEdges(deterministic=True)
 
-	def getCities( self ):
+	def getCities(self):
 		return self._cities
 
 
-	def randperm( self, n ):		
+	def randperm(self, n):
 		perm = np.arange(n)
 		for i in range(n):
 			randind = random.randint(i,n-1)
@@ -104,7 +99,7 @@ class Scenario:
 		can_delete	= self._edge_exists.copy()
 
 		# Set aside a route to ensure at least one tour exists
-		route_keep = np.random.permutation( ncities )
+		route_keep = np.random.permutation(ncities)
 		if deterministic:
 			route_keep = self.randperm( ncities )
 		for i in range(ncities):
@@ -126,19 +121,19 @@ class Scenario:
 
 
 class City:
-	def __init__( self, x, y, elevation=0.0 ):
+	def __init__(self, x, y, elevation=0.0):
 		self._x = x
 		self._y = y
 		self._elevation = elevation
 		self._scenario	= None
 		self._index = -1
-		self._name	= None
+		self._name = None
 
-	def setIndexAndName( self, index, name ):
+	def setIndexAndName(self, index, name):
 		self._index = index
 		self._name = name
 
-	def setScenario( self, scenario ):
+	def setScenario(self, scenario):
 		self._scenario = scenario
 
 	''' <summary>
@@ -148,18 +143,17 @@ class City:
 		In advanced mode, it returns infinity when there is no connection.
 		</summary> '''
 	MAP_SCALE = 1000.0
-	def costTo( self, other_city ):
+	def costTo(self, other_city):
 
-		assert( type(other_city) == City )
+		assert(type(other_city) == City)
 
 		# In hard mode, remove edges; this slows down the calculation...
 		# Use this in all difficulties, it ensures INF for self-edge
-		if not self._scenario._edge_exists[self._index, other_city._index]:
+		if not self._scenario.__edge_exists_matrix[self._index, other_city._index]:
 			return np.inf
 
 		# Euclidean Distance
-		cost = math.sqrt( (other_city._x - self._x)**2 +
-						  (other_city._y - self._y)**2 )
+		cost = math.sqrt((other_city._x - self._x)**2 + (other_city._y - self._y)**2)
 
 		# For Medium and Hard modes, add in an asymmetric cost (in easy mode it is zero).
 		if not self._scenario._difficulty == 'Easy':
@@ -170,3 +164,8 @@ class City:
 
 		return int(math.ceil(cost * self.MAP_SCALE))
 
+	def __hash__(self):
+		return hash(self._name)
+
+	def __eq__(self, other):
+		return isinstance(other, City) and self.name == other.name
