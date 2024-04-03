@@ -14,6 +14,8 @@ else:
 import time
 import numpy as np
 from TSPClasses import *
+from matrix import Matrix
+import networkx as nx
 import heapq
 import itertools
 
@@ -163,10 +165,111 @@ class TSPSolver:
 		max queue size, total number of states created, and number of pruned states.</returns>
 	'''
 
-	def branchAndBound( self, time_allowance=60.0 ):
-		pass
+	def branchAndBound(self, time_allowance=60.0):
+		# get cities
+		cities = self._scenario.getCities()
+		num_cities = len(cities)
+
+		# results variables
+		results = {}
+		found_tour = False
+		bssf = None
+		num_solutions = 0
+		pruned = 0
+		nodes_created = 0
+
+		# initialize matrix
+		matrix = Matrix(dimension=num_cities, cities=cities)
+		lower_bound = matrix.reduce_matrix()
+
+		# run greedy algorithm for an initial solution
+		greedy_algo = self.greedy(time_allowance=60)
+		best_cost = greedy_algo['cost']
+		best_path = greedy_algo['soln'].route
+
+		# initialize branch and bound search
+		priority_queue = []
+		max_queue_size = 0
+		heapq.heappush(priority_queue, ([0], 0, matrix))  # initialized with ([city path], cost of path)
+
+		start_time = time.time()
+
+		# Start Brand and Bound Algorithm
+		while priority_queue and time.time()-start_time < time_allowance:
+			if len(priority_queue) > max_queue_size:
+				max_queue_size = len(priority_queue)
+
+			route = heapq.heappop(priority_queue)
+			current_path, current_cost, matrix = route
+
+			if current_cost > best_cost:
+				pruned += 1
+				continue
+
+			if len(current_path) == num_cities:
+				num_solutions += 1
+				if current_cost < best_cost:
+					best_path = current_path
+					best_cost = current_cost
+			else:
+				for next_city in range(num_cities):
+					if next_city not in current_path:
+						matrix_copy = matrix.copy()
+						nodes_created += 1
+
+						next_cost = matrix_copy.update(current_path[-1], next_city)
+
+						reduced_cost = matrix_copy.reduce_matrix()
+
+						updated_path_cost = next_cost + reduced_cost + current_cost
+
+						if updated_path_cost <= best_cost:
+							heapq.heappush(priority_queue, (current_path + [next_city], updated_path_cost,
+															matrix_copy))
+						else:
+							pruned += 1
+		# end branch and bound algorithm
+
+		# post processing
+		city_path = []
+		for index in best_path:
+			city_path.append(cities[index])
+
+		bssf = TSPSolution(city_path)
 
 
+		if num_solutions > 0:
+			found_tour = True
+
+		end_time = time.time()
+
+		# set results
+		results['cost'] = bssf.cost if found_tour else math.inf
+		results['time'] = end_time - start_time
+		results['count'] = num_solutions
+		results['soln'] = bssf
+		results['max'] = max_queue_size
+		results['total'] = nodes_created
+		results['pruned'] = pruned
+		return results
+
+	@staticmethod
+	def lower_bound_mst(matrix: Matrix, partial_tour: list[int]) -> float:
+		# Create a graph from the matrix
+		graph = nx.Graph(matrix.matrix)
+
+		# Add edges from the partial tour to ensure connectivity
+		for i in range(len(partial_tour) - 1):
+			graph.add_edge(partial_tour[i], partial_tour[i + 1])
+		graph.add_edge(partial_tour[-1], partial_tour[0])
+
+		# Calculate the minimum spanning tree (MST) of the subgraph
+		mst_edges = nx.minimum_spanning_edges(graph)
+
+		# Calculate the sum of edge weights in the MST
+		lower_bound = sum(matrix.get_cost(u, v) for u, v, _ in mst_edges)
+
+		return lower_bound
 
 	''' <summary>
 		This is the entry point for the algorithm you'll write for your group project.
